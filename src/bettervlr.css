@@ -522,6 +522,7 @@ span.emoji-preview.selected {
 #regions-filter,
 #events-filter {
   margin: 0px;
+  margin-bottom: 11px;
 }
 
 .js-home-matches-upcoming,

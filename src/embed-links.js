@@ -1,5 +1,3 @@
-import { parseTwemojis } from "./emojis.js";
-
 const post_images = ".post-image, .tweet-pic";
 $(document).one("click", post_images, function () {
     $(".post-body").each(function () {
@@ -230,9 +228,6 @@ function renderTweet(tweet, anchor_tag) {
     // Replace the placeholder with tweet
     $(anchor_tag).next().replaceWith(tweet_embed);
 
-    // Render Twemojis
-    parseTwemojis(".tweet-text, .user-info");
-
     //video
     $(anchor_tag).next().find(".embed-video").one("click", function () {
         const video = getBestVideoVariant(tweet.all.mediaDetails[0].video_info.variants);
@@ -285,7 +280,7 @@ $(yt).each(function () {
     const id_shorts = video.match(/shorts\/([^&]+)/);
 
     if (id || id_share || id_shorts) {
-        const video_id = id ? id[1] : id_share[1];
+        const video_id = id ? id[1] : (id_share ? id_share[1] : id_shorts[1]);
         const url = "https://youtube.com/oembed?url=https://www.youtube.com/watch?v=" + video_id;
         const image = `https://img.youtube.com/vi/${video_id}/maxresdefault.jpg`;
         $.ajax({

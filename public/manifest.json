@@ -1,9 +1,9 @@
 {
-  "name": "BetterVLR",
-  "description": "VLR.GG but better",
-  "version": "0.0.6",
+  "name": "Yukkys VLR",
+  "description": "VLR.GG but Yukkys edition.",
+  "author": "Yukky",
+  "version": "1.0",
   "manifest_version": 3,
-  "homepage_url": "https://bettervlr.com",
   "icons": {
     "128": "logo.png"
   },

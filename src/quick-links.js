@@ -1,3 +1,45 @@
+// Function to generate VCT quick links based on current year
+function generateVCTQuickLinks() {
+	const currentYear = new Date().getFullYear();
+	let vctLinks = '';
+	
+	// Only show current year and past years, down to 2021
+	for (let year = currentYear; year >= 2021; year--) {
+		vctLinks += `
+		<div class="quick-links">
+			<a class="wf-module-item" href="/vct-${year}"><img src="https://owcdn.net/img/60865adcb127b.png" alt="VCT ${year}">VCT ${year}</a>
+			<div class="wf-module-item" style="cursor: not-allowed;">EDIT<i class="fa fa-pencil" aria-hidden="true"></i></div>
+			<div class="wf-module-item" style="cursor: not-allowed;">REMOVE<i class="fa fa-ban" aria-hidden="true"></i></div>
+		</div>`;
+	}
+	
+	return vctLinks;
+}
+
+// Function to generate VCT dropdown items
+function generateVCTDropdownItems() {
+	const currentYear = new Date().getFullYear();
+	let vctItems = '';
+	
+	for (let year = currentYear; year >= 2021; year--) {
+		vctItems += `<a class="wf-module-item" href="/vct-${year}"><img src="https://owcdn.net/img/60865adcb127b.png" alt="VCT ${year}">VCT ${year}</a>`;
+	}
+	
+	return vctItems;
+}
+
+// Function to generate VCT mobile items
+function generateVCTMobileItems() {
+	const currentYear = new Date().getFullYear();
+	let vctItems = '';
+	
+	for (let year = currentYear; year >= 2021; year--) {
+		vctItems += `<a class="header-menu-item quick-link" href="/vct-${year}">VCT ${year}</a>`;
+	}
+	
+	return vctItems;
+}
+
 // Function to remove a quick link
 function removeQuickLink(event) {
 	const quick_links = JSON.parse(localStorage.getItem("quick_links")) || [];
@@ -70,21 +112,7 @@ function displayQuickLinksInSettings() {
 const quick_links = `
 <div id="sortable-container" class="wf-card mod-form mod-dark">
 	<div class="form-section" style="margin-top: 0;">Quick Links</div>
-	<div class="quick-links">
-		<a class="wf-module-item" href="/vct-2023"><img src="https://i.imgur.com/2dqrmN2.png" alt="VCT 2023">VCT 2023</a>
-		<div class="wf-module-item" style="cursor: not-allowed;">EDIT<i class="fa fa-pencil" aria-hidden="true"></i></div>
-		<div class="wf-module-item" style="cursor: not-allowed;">REMOVE<i class="fa fa-ban" aria-hidden="true"></i></div>
-	</div>
-	<div class="quick-links">
-		<a class="wf-module-item" href="/vct-2022"><img src="https://i.imgur.com/wiQInjN.png" alt="VCT 2022">VCT 2022</a>
-		<div class="wf-module-item" style="cursor: not-allowed;">EDIT<i class="fa fa-pencil" aria-hidden="true"></i></div>
-		<div class="wf-module-item" style="cursor: not-allowed;">REMOVE<i class="fa fa-ban" aria-hidden="true"></i></div>
-	</div>
-	<div class="quick-links">
-		<a class="wf-module-item" href="/vct-2021"><img src="https://i.imgur.com/bgkt9iS.png" alt="VCT 2021">VCT 2021</a>
-		<div class="wf-module-item" style="cursor: not-allowed;">EDIT<i class="fa fa-pencil" aria-hidden="true"></i></div>
-		<div class="wf-module-item" style="cursor: not-allowed;">REMOVE<i class="fa fa-ban" aria-hidden="true"></i></div>
-	</div>
+	${generateVCTQuickLinks()}
 	<div class="quick-links">
 		<a class="wf-module-item" href="/transfers"><img src="https://i.imgur.com/O6aeTiv.png" alt="Transfers">Transfers</a>
 		<div class="wf-module-item" style="cursor: not-allowed;">EDIT<i class="fa fa-pencil" aria-hidden="true"></i></div>
@@ -101,9 +129,7 @@ $(".header-nav-item.mod-stats").next().after(`
 <div class="header-nav-item dropdown mod-vlr" style="align-items: center;" tabindex="0">
 	<i class="fa fa-chevron-right" aria-hidden="true"></i>
 	<div class="dropdown-content wf-card">
-		<a class="wf-module-item" href="/vct-2023"><img src="https://i.imgur.com/2dqrmN2.png" alt="VCT 2023">VCT 2023</a>
-		<a class="wf-module-item" href="/vct-2022"><img src="https://i.imgur.com/wiQInjN.png" alt="VCT 2022">VCT 2022</a>
-		<a class="wf-module-item" href="/vct-2021"><img src="https://i.imgur.com/bgkt9iS.png" alt="VCT 2021">VCT 2021</a>
+		${generateVCTDropdownItems()}
 		<a class="wf-module-item" href="/transfers"><img src="https://i.imgur.com/O6aeTiv.png" alt="Transfers">Transfers</a>
 	</div>
 </div>
@@ -121,9 +147,7 @@ $(".header-switch, .mod-dropdown").on("keydown", function (event) {
 $(".header-menu-item:first").before(`
 <div class="header-menu-item dropdown">
 	<i class="fa fa-chevron-right"></i> Quick Links</div>
-<a class="header-menu-item quick-link" href="/vct-2023">VCT 2023</a>
-<a class="header-menu-item quick-link" href="/vct-2022">VCT 2022</a>
-<a class="header-menu-item quick-link" href="/vct-2021">VCT 2021</a>
+${generateVCTMobileItems()}
 <a class="header-menu-item quick-link" href="/transfers">Transfers</a>`);
 
 $(document).on("click", ".header-menu-item.dropdown", function () {
