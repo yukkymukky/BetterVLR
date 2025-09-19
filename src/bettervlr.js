@@ -15,7 +15,6 @@ import "./search.js";
 import "./past-players.js";
 import "./profile-page.js";
 import "./textarea-images.js";
-import "./polls.js";
 import "./word-block.js";
 import "./match-filter.js";
 import "./player-avg.js"

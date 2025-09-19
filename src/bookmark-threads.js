@@ -14,8 +14,14 @@ function pageToShowBookmarks() {
 }
 
 if (pageToShowBookmarks()) {
-  addBookmarkSection();
-  addRecentDiscussionToggle();
+  if (JSON.parse(localStorage.getItem("settings")).hide_bookmarked_threads !== true) {
+    addBookmarkSection();
+  }
+
+  if (JSON.parse(localStorage.getItem("settings")).hide_collapsable_option !== true) {
+    addRecentDiscussionToggle();
+  }
+
 }
 
 // Check if we're on a thread page to add bookmark buttons
@@ -73,6 +79,8 @@ function addBookmarkSection() {
   if (existingBookmarks) {
     existingBookmarks.parentElement.remove();
   }
+
+  const showCollapsableOption = JSON.parse(localStorage.getItem("settings")).hide_collapsable_option !== true;
   
   // Get bookmarked items from localStorage and categorize them
   const bookmarkedItems = getBookmarkedItems();
@@ -92,7 +100,7 @@ function addBookmarkSection() {
             onclick="toggleAllBookmarks()" 
             title="Click to collapse/expand bookmarks">
         Bookmarks
-        <i class="fa fa-chevron-${isBookmarksCollapsed ? 'right' : 'down'} bookmark-toggle-arrow" style="font-size: 10px; transition: transform 0.2s; margin-left: 8px;"></i>
+        ${showCollapsableOption ? `<i class="fa fa-chevron-${isBookmarksCollapsed ? 'right' : 'down'} bookmark-toggle-arrow" style="font-size: 10px; transition: transform 0.2s; margin-left: 8px;"></i>` : ''}
       </span>
       <div class="bookmark-content-wrapper" style="display: ${isBookmarksCollapsed ? 'none' : 'block'};">
   `;

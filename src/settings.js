@@ -8,8 +8,8 @@ if (window.location.href.startsWith("https://www.vlr.gg/settings")) {
 			<a class="wf-nav-item mod-first" href="https://www.vlr.gg/settings">
 				<div class="wf-nav-item-title">VLR</div>
 			</a>
-			<a class="wf-nav-item" href="https://www.vlr.gg/settings?bettervlr">
-				<div class="wf-nav-item-title">BetterVLR</div>
+			<a class="wf-nav-item" href="https://www.vlr.gg/settings?yukkysvlr">
+				<div class="wf-nav-item-title">YukkysVLR</div>
 			</a>
 			<a class="wf-nav-item" href="https://www.vlr.gg/settings?block-list">
 				<div class="wf-nav-item-title">Block List</div>
@@ -34,6 +34,7 @@ $(document).ready(function () {
 
 // BetterVLR
 const display = `
+<span class="wf-label mod-sidebar" style="padding-left: 0px;">YukkysVLR is a fork of BetterVLR, all credit to the original creators</span>
 <div class="wf-card mod-form mod-dark">
 	<div class="form-section" style="margin-top: 0;">Display</div>
 	<div class="form-label">Threads</div>
@@ -83,6 +84,14 @@ const sidebar = `
 		<input type="checkbox" id="hide_recent_discussions">
 		<span style="font-size: 11px; vertical-align: -1px; margin-left: 1px;">Hide Recent Discussions</span>
 	</div>
+  <div style="margin-bottom: 5px;">
+		<input type="checkbox" id="hide_bookmarked_threads">
+		<span style="font-size: 11px; vertical-align: -1px; margin-left: 1px;">Hide Bookmarked Threads</span>
+	</div>
+  <div style="margin-bottom: 5px;">
+		<input type="checkbox" id="hide_collapsable_option">
+		<span style="font-size: 11px; vertical-align: -1px; margin-left: 1px;">Hide Collapsable Options</span>
+	</div>
 </div>`;
 
 const misc = `
@@ -94,7 +103,7 @@ const misc = `
 	</div>
 </div>`;
 
-if (window.location.search === "?bettervlr") {
+if (window.location.search === "?yukkysvlr") {
 	$(".wf-card.mod-form").not("form .wf-card.mod-form").hide();
 	const form = $("form:eq(1)");
 	form.html(display + discussions + sidebar + quick_links + misc);

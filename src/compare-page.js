@@ -314,6 +314,26 @@ function createPlayerComparisonTable(player1Data, player2Data) {
   const stats1 = player1Data.statsTable.overallStats;
   const stats2 = player2Data.statsTable.overallStats;
   
+  // Helper function to safely parse values and handle N/A
+  function safeParseFloat(value) {
+    if (value === "N/A" || value === null || value === undefined) {
+      return { isValid: false, num: NaN };
+    }
+    const num = parseFloat(value);
+    return { isValid: !isNaN(num), num: num };
+  }
+  
+  // Helper function to safely parse percentage values and handle N/A
+  function safeParsePercent(value) {
+    if (value === "N/A" || value === null || value === undefined) {
+      return { isValid: false, num: NaN };
+    }
+    // Remove % sign and parse as integer
+    const cleanValue = typeof value === 'string' ? value.replace('%', '') : value;
+    const num = parseInt(cleanValue);
+    return { isValid: !isNaN(num), num: num };
+  }
+  
   // Get current time period from URL
   const urlParams = new URLSearchParams(window.location.search);
   const currentPeriod = urlParams.get('period') || 'all';
@@ -356,17 +376,18 @@ function createPlayerComparisonTable(player1Data, player2Data) {
             ${player1Data.playerInfo.teamLogo ? `
               <div style="
                 position: absolute;
-                top: -10px;
-                left: -10px;
-                width: 120px;
-                height: 120px;
+                top: -15px;
+                // left: -10px;
+                width: 100px;
+                height: 100px;
                 background-image: url('${player1Data.playerInfo.teamLogo}');
                 background-size: cover;
                 background-position: center;
-                filter: blur(2px);
                 opacity: 0.75;
                 z-index: 1;
                 border-radius: 4px;
+                  -webkit-mask-image: linear-gradient(black, transparent);
+  mask-image: linear-gradient(black, transparent);
               "></div>
             ` : ''}
             <!-- Player avatar -->
@@ -447,17 +468,19 @@ function createPlayerComparisonTable(player1Data, player2Data) {
             ${player2Data.playerInfo.teamLogo ? `
               <div style="
                 position: absolute;
-                top: -10px;
-                left: -10px;
-                width: 120px;
-                height: 120px;
+                top: -15px;
+                // left: -10px;
+                width: 100px;
+                height: 100px;
                 background-image: url('${player2Data.playerInfo.teamLogo}');
                 background-size: cover;
                 background-position: center;
-                filter: blur(2px);
+                // filter: blur(2px);
                 opacity: 0.75;
                 z-index: 1;
                 border-radius: 4px;
+                  -webkit-mask-image: linear-gradient(black, transparent);
+  mask-image: linear-gradient(black, transparent);
               "></div>
             ` : ''}
             <!-- Player avatar -->
@@ -487,71 +510,100 @@ function createPlayerComparisonTable(player1Data, player2Data) {
           let player2Opacity = '1';
           
           if (stat.format === 'decimal' || stat.format === 'number') {
-            const num1 = parseFloat(stat.value1);
-            const num2 = parseFloat(stat.value2);
+            const parse1 = safeParseFloat(stat.value1);
+            const parse2 = safeParseFloat(stat.value2);
             
-            if (stat.higherBetter) {
-              if (num1 > num2) {
-                player1Better = true;
-                player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                player1BorderColor = '#4caf50';
-                player2BorderColor = '#f44336';
-                player2Opacity = '0.7';
-              } else if (num1 < num2) {
-                player2Better = true;
-                player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                player1BorderColor = '#f44336';
-                player2BorderColor = '#4caf50';
-                player1Opacity = '0.7';
-              }
-            } else {
-              if (num1 < num2) {
-                player1Better = true;
-                player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                player1BorderColor = '#4caf50';
-                player2BorderColor = '#f44336';
-                player2Opacity = '0.7';
-              } else if (num1 > num2) {
-                player2Better = true;
-                player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                player1BorderColor = '#f44336';
-                player2BorderColor = '#4caf50';
-                player1Opacity = '0.7';
+            if (parse1.isValid && !parse2.isValid) {
+              // Player 1 has data, Player 2 doesn't
+              player1Better = true;
+              player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+              player1BorderColor = '#4caf50';
+            } else if (!parse1.isValid && parse2.isValid) {
+              // Player 2 has data, Player 1 doesn't
+              player2Better = true;
+              player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+              player2BorderColor = '#4caf50';
+            } else if (parse1.isValid && parse2.isValid) {
+              // Both have valid data - normal comparison
+              if (stat.higherBetter) {
+                if (parse1.num > parse2.num) {
+                  player1Better = true;
+                  player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+                  player1BorderColor = '#4caf50';
+                  player2BorderColor = '#f44336';
+                  player2Opacity = '0.7';
+                } else if (parse1.num < parse2.num) {
+                  player2Better = true;
+                  player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+                  player1BorderColor = '#f44336';
+                  player2BorderColor = '#4caf50';
+                  player1Opacity = '0.7';
+                }
+              } else {
+                // Lower is better
+                if (parse1.num < parse2.num) {
+                  player1Better = true;
+                  player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+                  player1BorderColor = '#4caf50';
+                  player2BorderColor = '#f44336';
+                  player2Opacity = '0.7';
+                } else if (parse1.num > parse2.num) {
+                  player2Better = true;
+                  player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+                  player1BorderColor = '#f44336';
+                  player2BorderColor = '#4caf50';
+                  player1Opacity = '0.7';
+                }
               }
             }
+            // If both are N/A, no highlighting
           } else if (stat.format === 'percent') {
-            const num1 = parseInt(stat.value1);
-            const num2 = parseInt(stat.value2);
+            const parse1 = safeParsePercent(stat.value1);
+            const parse2 = safeParsePercent(stat.value2);
             
-            if (stat.higherBetter) {
-              if (num1 > num2) {
-                player1Better = true;
-                player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                player1BorderColor = '#4caf50';
-                player2BorderColor = '#f44336';
-                player2Opacity = '0.7';
-              } else if (num1 < num2) {
-                player2Better = true;
-                player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                player1BorderColor = '#f44336';
-                player2BorderColor = '#4caf50';
-                player1Opacity = '0.7';
-              }
-            } else {
-              if (num1 < num2) {
-                player1Better = true;
-                player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                player1BorderColor = '#4caf50';
-                player2BorderColor = '#f44336';
-                player2Opacity = '0.7';
-              } else if (num1 > num2) {
-                player2Better = true;
-                player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                player1BorderColor = '#f44336';
-                player2BorderColor = '#4caf50';
-                player1Opacity = '0.7';
+            if (parse1.isValid && !parse2.isValid) {
+              // Player 1 has data, Player 2 doesn't
+              player1Better = true;
+              player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+              player1BorderColor = '#4caf50';
+            } else if (!parse1.isValid && parse2.isValid) {
+              // Player 2 has data, Player 1 doesn't
+              player2Better = true;
+              player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+              player2BorderColor = '#4caf50';
+            } else if (parse1.isValid && parse2.isValid) {
+              // Both have valid data - normal comparison
+              if (stat.higherBetter) {
+                if (parse1.num > parse2.num) {
+                  player1Better = true;
+                  player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+                  player1BorderColor = '#4caf50';
+                  player2BorderColor = '#f44336';
+                  player2Opacity = '0.7';
+                } else if (parse1.num < parse2.num) {
+                  player2Better = true;
+                  player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+                  player1BorderColor = '#f44336';
+                  player2BorderColor = '#4caf50';
+                  player1Opacity = '0.7';
+                }
+              } else {
+                if (parse1.num < parse2.num) {
+                  player1Better = true;
+                  player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+                  player1BorderColor = '#4caf50';
+                  player2BorderColor = '#f44336';
+                  player2Opacity = '0.7';
+                } else if (parse1.num > parse2.num) {
+                  player2Better = true;
+                  player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
+                  player1BorderColor = '#f44336';
+                  player2BorderColor = '#4caf50';
+                  player1Opacity = '0.7';
+                }
               }
             }
+            // If both are N/A, no highlighting
           }
           
           // Alternating row colors
@@ -609,27 +661,41 @@ function createPlayerComparisonCard(playerData, otherPlayerData, side) {
     let color = '#ffffff'; // Default white
     
     if (stat.format === 'decimal' || stat.format === 'number') {
-      const num1 = parseFloat(stat.value);
-      const num2 = parseFloat(stat.otherValue);
+      const parse1 = safeParseFloat(stat.value);
+      const parse2 = safeParseFloat(stat.otherValue);
       
-      if (stat.higherBetter) {
-        if (num1 > num2) color = '#4caf50'; // Green for better
-        else if (num1 < num2) color = '#f44336'; // Red for worse
-      } else {
-        if (num1 < num2) color = '#4caf50'; // Green for better (lower is better)
-        else if (num1 > num2) color = '#f44336'; // Red for worse
+      if (parse1.isValid && !parse2.isValid) {
+        color = '#4caf50'; // Green for having data
+      } else if (!parse1.isValid && parse2.isValid) {
+        color = '#f44336'; // Red for not having data
+      } else if (parse1.isValid && parse2.isValid) {
+        if (stat.higherBetter) {
+          if (parse1.num > parse2.num) color = '#4caf50'; // Green for better
+          else if (parse1.num < parse2.num) color = '#f44336'; // Red for worse
+        } else {
+          if (parse1.num < parse2.num) color = '#4caf50'; // Green for better (lower is better)
+          else if (parse1.num > parse2.num) color = '#f44336'; // Red for worse
+        }
       }
+      // If both are N/A, stay default white
     } else if (stat.format === 'percent') {
-      const num1 = parseInt(stat.value);
-      const num2 = parseInt(stat.otherValue);
+      const parse1 = safeParsePercent(stat.value);
+      const parse2 = safeParsePercent(stat.otherValue);
       
-      if (stat.higherBetter) {
-        if (num1 > num2) color = '#4caf50';
-        else if (num1 < num2) color = '#f44336';
-      } else {
-        if (num1 < num2) color = '#4caf50';
-        else if (num1 > num2) color = '#f44336';
+      if (parse1.isValid && !parse2.isValid) {
+        color = '#4caf50'; // Green for having data
+      } else if (!parse1.isValid && parse2.isValid) {
+        color = '#f44336'; // Red for not having data
+      } else if (parse1.isValid && parse2.isValid) {
+        if (stat.higherBetter) {
+          if (parse1.num > parse2.num) color = '#4caf50';
+          else if (parse1.num < parse2.num) color = '#f44336';
+        } else {
+          if (parse1.num < parse2.num) color = '#4caf50';
+          else if (parse1.num > parse2.num) color = '#f44336';
+        }
       }
+      // If both are N/A, stay default white
     }
     
     return { ...stat, color };
@@ -660,51 +726,87 @@ function createPlayerComparisonCard(playerData, otherPlayerData, side) {
           let opacity = '1';
           
           if (stat.format === 'decimal' || stat.format === 'number') {
-            const num1 = parseFloat(stat.value);
-            const num2 = parseFloat(stat.otherValue);
+            const parse1 = safeParseFloat(stat.value);
+            const parse2 = safeParseFloat(stat.otherValue);
             
-            if (stat.higherBetter) {
-              if (num1 > num2) {
-                borderSide = side === 'left' ? 'border-left' : 'border-right';
-                borderColor = '#4caf50'; // Green for better
-              } else if (num1 < num2) {
-                borderSide = side === 'left' ? 'border-left' : 'border-right';
-                borderColor = '#f44336'; // Red for worse
-                opacity = '0.7';
+            // Handle N/A values - if one is N/A and the other isn't, highlight the real value
+            if (parse1.isValid && !parse2.isValid) {
+              // Player 1 has data, Player 2 doesn't - highlight Player 1
+              if (side === 'left') {
+                borderSide = 'border-left';
+                borderColor = '#4caf50'; // Green for having data
               }
-            } else {
-              if (num1 < num2) {
-                borderSide = side === 'left' ? 'border-left' : 'border-right';
-                borderColor = '#4caf50'; // Green for better (lower is better)
-              } else if (num1 > num2) {
-                borderSide = side === 'left' ? 'border-left' : 'border-right';
-                borderColor = '#f44336'; // Red for worse
-                opacity = '0.7';
+            } else if (!parse1.isValid && parse2.isValid) {
+              // Player 2 has data, Player 1 doesn't - highlight Player 2
+              if (side === 'right') {
+                borderSide = 'border-right';
+                borderColor = '#4caf50'; // Green for having data
+              }
+            } else if (parse1.isValid && parse2.isValid) {
+              // Both have data - normal comparison
+              if (stat.higherBetter) {
+                if (parse1.num > parse2.num) {
+                  borderSide = side === 'left' ? 'border-left' : 'border-right';
+                  borderColor = '#4caf50'; // Green for better
+                } else if (parse1.num < parse2.num) {
+                  borderSide = side === 'left' ? 'border-left' : 'border-right';
+                  borderColor = '#f44336'; // Red for worse
+                  opacity = '0.7';
+                }
+              } else {
+                if (parse1.num < parse2.num) {
+                  borderSide = side === 'left' ? 'border-left' : 'border-right';
+                  borderColor = '#4caf50'; // Green for better (lower is better)
+                } else if (parse1.num > parse2.num) {
+                  borderSide = side === 'left' ? 'border-left' : 'border-right';
+                  borderColor = '#f44336'; // Red for worse
+                  opacity = '0.7';
+                }
               }
             }
+            // If both are N/A, no highlighting
           } else if (stat.format === 'percent') {
-            const num1 = parseInt(stat.value);
-            const num2 = parseInt(stat.otherValue);
+            const parse1 = safeParsePercent(stat.value);
+            const parse2 = safeParsePercent(stat.otherValue);
             
-            if (stat.higherBetter) {
-              if (num1 > num2) {
-                borderSide = side === 'left' ? 'border-left' : 'border-right';
+            if (parse1.isValid && !parse2.isValid) {
+              // Player has data, other doesn't
+              if (side === 'left') {
+                borderSide = 'border-left';
                 borderColor = '#4caf50';
-              } else if (num1 < num2) {
-                borderSide = side === 'left' ? 'border-left' : 'border-right';
-                borderColor = '#f44336';
-                opacity = '0.7';
+              } else {
+                borderSide = 'border-right';
+                borderColor = '#4caf50';
               }
-            } else {
-              if (num1 < num2) {
-                borderSide = side === 'left' ? 'border-left' : 'border-right';
+            } else if (!parse1.isValid && parse2.isValid) {
+              // Other player has data, this one doesn't
+              if (side === 'right') {
+                borderSide = 'border-right';
                 borderColor = '#4caf50';
-              } else if (num1 > num2) {
-                borderSide = side === 'left' ? 'border-left' : 'border-right';
-                borderColor = '#f44336';
-                opacity = '0.7';
+              }
+            } else if (parse1.isValid && parse2.isValid) {
+              // Both have valid data - normal comparison
+              if (stat.higherBetter) {
+                if (parse1.num > parse2.num) {
+                  borderSide = side === 'left' ? 'border-left' : 'border-right';
+                  borderColor = '#4caf50';
+                } else if (parse1.num < parse2.num) {
+                  borderSide = side === 'left' ? 'border-left' : 'border-right';
+                  borderColor = '#f44336';
+                  opacity = '0.7';
+                }
+              } else {
+                if (parse1.num < parse2.num) {
+                  borderSide = side === 'left' ? 'border-left' : 'border-right';
+                  borderColor = '#4caf50';
+                } else if (parse1.num > parse2.num) {
+                  borderSide = side === 'left' ? 'border-left' : 'border-right';
+                  borderColor = '#f44336';
+                  opacity = '0.7';
+                }
               }
             }
+            // If both are N/A, no highlighting
           }
           
           // Alternating row colors

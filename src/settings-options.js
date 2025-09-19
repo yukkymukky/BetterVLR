@@ -88,6 +88,8 @@ function loadCheckboxValues() {
     $("#hide_live_streams").prop("checked", settings.hide_live_streams);
     $("#hide_stickied_threads").prop("checked", settings.hide_stickied_threads);
     $("#hide_recent_discussions").prop("checked", settings.hide_recent_discussions);
+    $("#hide_bookmarked_threads").prop("checked", settings.hide_bookmarked_threads);
+    $("#hide_collapsable_option").prop("checked", settings.hide_collapsable_option);
     $("#imgur_proxy").prop("checked", settings.imgur_proxy);
 }
 

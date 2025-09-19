@@ -462,7 +462,7 @@ if (window.location.href.startsWith('https://www.vlr.gg/player/')) {
 
     // Only count visible rows (not hidden by filter)
     const visibleRows = table.querySelectorAll(
-      "tr:not([data-avg-row]):not([style*='display: none'])"
+      "tr:not([data-avg-row]):not([data-wtd-row]):not([style*='display: none'])"
     )
 
     visibleRows.forEach(row => {
@@ -479,14 +479,67 @@ if (window.location.href.startsWith('https://www.vlr.gg/player/')) {
     return { sums, rowCount }
   }
 
-  function updateAverageRow () {
-    let avgRow = table.querySelector('tr[data-avg-row]')
-    if (avgRow) {
-      avgRow.remove()
+  function calculateWeightedAverages () {
+    const weightedSums = Array(colFormats.length).fill(0)
+    let totalRounds = 0
+    let totalKills = 0
+    let totalDeaths = 0
+    let totalAssists = 0
+    let totalFirstKills = 0
+    let totalFirstDeaths = 0
+
+    // Only count visible rows (not hidden by filter)
+    const visibleRows = table.querySelectorAll(
+      "tr:not([data-avg-row]):not([data-wtd-row]):not([style*='display: none'])"
+    )
+
+    visibleRows.forEach(row => {
+      const cells = row.querySelectorAll('td')
+      const rounds = parseFloat(cells[2]?.innerText.trim()) || 0 // RND column
+      totalRounds += rounds
+
+      // Accumulate totals for K/D calculation
+      totalKills += parseFloat(cells[12]?.innerText.trim()) || 0
+      totalDeaths += parseFloat(cells[13]?.innerText.trim()) || 0
+      totalAssists += parseFloat(cells[14]?.innerText.trim()) || 0
+      totalFirstKills += parseFloat(cells[15]?.innerText.trim()) || 0
+      totalFirstDeaths += parseFloat(cells[16]?.innerText.trim()) || 0
+
+      // Weight stats by rounds for columns that should be weighted
+      colFormats.forEach((fmt, i) => {
+        if (fmt.type === 'skip') return
+        if (i === 2) return // Skip RND column itself
+
+        let val = cells[i]?.innerText.trim().replace('%', '')
+        val = parseFloat(val)
+        if (!isNaN(val) && rounds > 0) {
+          // Weight by rounds for rate stats (Rating, ACS, ADR, KAST, KPR, APR, FKPR, FDPR)
+          if (i >= 3 && i <= 11) {
+            weightedSums[i] += val * rounds
+          }
+        }
+      })
+    })
+
+    return { 
+      weightedSums, 
+      totalRounds, 
+      totalKills, 
+      totalDeaths, 
+      totalAssists, 
+      totalFirstKills, 
+      totalFirstDeaths 
     }
+  }
+
+  function updateAverageRow () {
+    // Remove existing average and weighted rows
+    let avgRow = table.querySelector('tr[data-avg-row]')
+    let wtdRow = table.querySelector('tr[data-wtd-row]')
+    if (avgRow) avgRow.remove()
+    if (wtdRow) wtdRow.remove()
 
     const { sums, rowCount } = calculateAverages()
-
     if (rowCount === 0) return 
 
     // Create new avg row
@@ -516,11 +569,80 @@ if (window.location.href.startsWith('https://www.vlr.gg/player/')) {
       avgRow.appendChild(td)
     })
 
+    // Calculate weighted averages
+    const { 
+      weightedSums, 
+      totalRounds, 
+      totalKills, 
+      totalDeaths, 
+      totalAssists, 
+      totalFirstKills, 
+      totalFirstDeaths 
+    } = calculateWeightedAverages()
+
+    // Create weighted row
+    wtdRow = document.createElement('tr')
+    wtdRow.setAttribute('data-wtd-row', 'true')
+
+    colFormats.forEach((fmt, i) => {
+      const td = document.createElement('td')
+      if (i === 0) {
+        td.style.borderTop = '1px solid #5b6167'
+      }
+      
+      if (fmt.type === 'skip') {
+        if (i === 0) {
+          // agent col
+          td.textContent = 'WTD'
+          td.style.fontWeight = 'bold'
+        }
+        wtdRow.appendChild(td)
+        return
+      }
+
+      let text = ''
+      
+      // Handle specific columns for weighted calculations
+      if (i === 2) { // RND column
+        text = totalRounds.toString()
+      } else if (i === 12) { // K column
+        text = totalKills.toString()
+      } else if (i === 13) { // D column  
+        text = totalDeaths.toString()
+      } else if (i === 14) { // A column
+        text = totalAssists.toString()
+      } else if (i === 15) { // FK column
+        text = totalFirstKills.toString()
+      } else if (i === 16) { // FD column
+        text = totalFirstDeaths.toString()
+      } else if (i === 17) { // +/- column
+        const plusMinus = totalKills - totalDeaths
+        text = plusMinus >= 0 ? `+${plusMinus}` : plusMinus.toString()
+      } else if (i === 18) { // K/D column
+        const kd = totalDeaths > 0 ? (totalKills / totalDeaths) : totalKills
+        text = kd.toFixed(2)
+      } else if (totalRounds > 0) {
+        // Weighted average for rate stats (Rating, ACS, ADR, KAST, etc.)
+        const weightedAvg = weightedSums[i] / totalRounds
+        if (fmt.type === 'int') text = Math.round(weightedAvg).toString()
+        else if (fmt.type === 'float1') text = weightedAvg.toFixed(1)
+        else if (fmt.type === 'float2') text = weightedAvg.toFixed(2)
+        else if (fmt.type === 'pct') text = Math.round(weightedAvg) + '%'
+      } else {
+        text = '-'
+      }
+      
+      td.textContent = text
+      td.className = fmt.cls
+      wtdRow.appendChild(td)
+    })
+
     table.appendChild(avgRow)
+    table.appendChild(wtdRow)
   }
 
   function filterTable () {
-    const dataRows = table.querySelectorAll('tr:not([data-avg-row])')
+    const dataRows = table.querySelectorAll('tr:not([data-avg-row]):not([data-wtd-row])')
 
     dataRows.forEach(row => {
       const img = row.querySelector('img[src*="/agents/"]')

@@ -110,7 +110,36 @@ function extractPlayerInfo(doc) {
 
 function extractStatsTable(doc) {
     const statsTable = doc.querySelector(".wf-card.mod-table .wf-table");
-    if (!statsTable) throw new Error("Stats table not found");
+    if (!statsTable) {
+        // Return mock data with N/A values instead of throwing error
+        const mockStats = {
+            RND: "N/A",
+            "Rating": "N/A",
+            "ACS": "N/A",
+            "K:D": "N/A",
+            "ADR": "N/A",
+            "KAST": "N/A",
+            "KPR": "N/A",
+            "APR": "N/A",
+            "FKPR": "N/A",
+            "FDPR": "N/A",
+            "K": "N/A",
+            "D": "N/A",
+            "A": "N/A",
+            "FK": "N/A",
+            "FD": "N/A",
+            "Matches": "N/A",
+        };
+
+        return {
+            headers: [],
+            rows: [],
+            overallStats: mockStats,
+            weightedStats: mockStats,
+            simpleStats: mockStats,
+            agents: [],
+        };
+    }
 
     // Extract headers
     const headers = [];
