@@ -4,22 +4,49 @@ $(".js-home-matches-upcoming").prev().before(`<div id="regions-filter" class="bt
 $(".js-home-events").css("margin-top", "0px");
 $(".js-home-events").prev().before(`<div id="events-filter" class="btn wf-card">EVENTS</div>`);
 
+// Load saved filter states from localStorage
+function loadFilterStates() {
+    const savedFilters = JSON.parse(localStorage.getItem('vlrMatchFilters') || '{}');
+    return {
+        regions: {
+            americas: savedFilters.americas !== false, // Default to true if not set
+            emea: savedFilters.emea !== false,
+            pacific: savedFilters.pacific !== false,
+            china: savedFilters.china !== false
+        },
+        events: {
+            vct: savedFilters.vct !== false,
+            vcl: savedFilters.vcl !== false,
+            gc: savedFilters.gc !== false
+        }
+    };
+}
+
+// Save filter states to localStorage
+function saveFilterState(filterId, isChecked) {
+    const savedFilters = JSON.parse(localStorage.getItem('vlrMatchFilters') || '{}');
+    savedFilters[filterId] = isChecked;
+    localStorage.setItem('vlrMatchFilters', JSON.stringify(savedFilters));
+}
+
+const filterStates = loadFilterStates();
+
 $("#regions-filter").after(`
 <div id="regions-filter-content" class="wf-card">
     <label class="btn">
-        <input id="americas" type="checkbox" checked>
+        <input id="americas" type="checkbox" ${filterStates.regions.americas ? 'checked' : ''}>
         <span>AMERICAS</span>
     </label>
     <label class="btn">
-        <input id="emea" type="checkbox" checked>
+        <input id="emea" type="checkbox" ${filterStates.regions.emea ? 'checked' : ''}>
         <span>EMEA</span>
     </label>
     <label class="btn">
-        <input id="pacific" type="checkbox" checked>
+        <input id="pacific" type="checkbox" ${filterStates.regions.pacific ? 'checked' : ''}>
         <span>PACIFIC</span>
     </label>
     <label class="btn">
-        <input id="china" type="checkbox" checked>
+        <input id="china" type="checkbox" ${filterStates.regions.china ? 'checked' : ''}>
         <span>CHINA</span>
     </label>
 </div>`);
@@ -27,15 +54,15 @@ $("#regions-filter").after(`
 $("#events-filter").after(`
 <div id="events-filter-content" class="wf-card">
     <label class="btn">
-        <input id="vct" type="checkbox" checked>
+        <input id="vct" type="checkbox" ${filterStates.events.vct ? 'checked' : ''}>
         <span>VCT</span>
     </label>
     <label class="btn">
-        <input id="vcl" type="checkbox" checked>
+        <input id="vcl" type="checkbox" ${filterStates.events.vcl ? 'checked' : ''}>
         <span>VCL</span>
     </label>
     <label class="btn">
-        <input id="gc" type="checkbox" checked>
+        <input id="gc" type="checkbox" ${filterStates.events.gc ? 'checked' : ''}>
         <span>GC</span>
     </label>
 </div>`);
@@ -65,17 +92,34 @@ $(document).on("click", "#events-filter", function () {
 $(document).ready(function () {
     function filterRegions(checkbox, country_codes) {
         const country_selectors = country_codes.map(code => `.flag.mod-${code}`).join(",");
+        const checkboxId = checkbox.attr('id');
 
         checkbox.on("change", function () {
+            const isChecked = checkbox.is(":checked");
+            
+            // Save filter state
+            saveFilterState(checkboxId, isChecked);
+            
             const match_selector = $(".wf-module-item.mod-match");
 
             match_selector.each(function () {
                 const flag = $(this).find(country_selectors);
                 if (flag.length > 1) {
-                    $(this).css("display", checkbox.is(":checked") ? "block" : "none");
+                    $(this).css("display", isChecked ? "block" : "none");
                 }
             });
         });
+        
+        // Apply initial filter state on page load
+        if (!checkbox.is(":checked")) {
+            const match_selector = $(".wf-module-item.mod-match");
+            match_selector.each(function () {
+                const flag = $(this).find(country_selectors);
+                if (flag.length > 1) {
+                    $(this).css("display", "none");
+                }
+            });
+        }
     }
 
     // Call the function for each checkbox with specified country codes
@@ -117,12 +161,19 @@ $(document).ready(function () {
 
 $(document).ready(function () {
     function filterEvents(checkbox, event_name) {
+        const checkboxId = checkbox.attr('id');
+        
         checkbox.on("change", function () {
+            const isChecked = checkbox.is(":checked");
+            
+            // Save filter state
+            saveFilterState(checkboxId, isChecked);
+            
             // Hide .wf-module-item.event-item elements that include the specified text
             $(".wf-module-item.event-item").each(function () {
                 const event_text = $(this).find(".event-item-name").text();
                 if (event_text.includes(event_name)) {
-                    $(this).css("display", checkbox.is(":checked") ? "flex" : "none");
+                    $(this).css("display", isChecked ? "flex" : "none");
 
                     // Get the href attribute of the matching event and hide related .wf-module-item.mod-match elements
                     let href_to_hide = $(this).attr("href");
@@ -130,11 +181,30 @@ $(document).ready(function () {
                     href_to_hide = href_to_hide.split("/").pop();
                     // Hide .wf-module-item.mod-match elements that include the href of hidden events
                     $(`.wf-module-item.mod-match[href*="${href_to_hide}"]`).each(function () {
-                        $(this).css("display", checkbox.is(":checked") ? "block" : "none");
+                        $(this).css("display", isChecked ? "block" : "none");
                     });
                 }
             });
         });
+        
+        // Apply initial filter state on page load
+        if (!checkbox.is(":checked")) {
+            $(".wf-module-item.event-item").each(function () {
+                const event_text = $(this).find(".event-item-name").text();
+                if (event_text.includes(event_name)) {
+                    $(this).css("display", "none");
+
+                    // Get the href attribute of the matching event and hide related .wf-module-item.mod-match elements
+                    let href_to_hide = $(this).attr("href");
+                    // Text after last "/"
+                    href_to_hide = href_to_hide.split("/").pop();
+                    // Hide .wf-module-item.mod-match elements that include the href of hidden events
+                    $(`.wf-module-item.mod-match[href*="${href_to_hide}"]`).each(function () {
+                        $(this).css("display", "none");
+                    });
+                }
+            });
+        }
     }
 
     // Call the function for each checkbox with its specified text

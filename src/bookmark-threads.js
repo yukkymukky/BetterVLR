@@ -116,13 +116,13 @@ function addBookmarkSection() {
         
         bookmarkHTML += `
           <div class="wf-card mod-dark mod-sidebar" style="margin-bottom: 8px;">
-            <div class="text-of" style="font-size: 9px; padding: 8px 12px 0px; text-transform: uppercase; letter-spacing: 0.5px;">
+            <div class="text-of" style="font-size: 9px; padding: 8px 12px; border-bottom: 1px solid #4c545d; text-transform: uppercase; letter-spacing: 0.5px;">
               ${category}
             </div>
             <div class="bookmark-category-${categoryId}">
               ${visibleItems.map((item, index) => `
                 <a href="${item.url}" class="wf-module-item mod-disc ${index === 0 ? 'mod-first' : ''}" title="${item.title}">
-                  <div class="module-item-title" style="color: #9ccbe2;">
+                  <div class="module-item-title mod-unread">
                     ${item.title}
                   </div>
                   <div class="module-item-bookmark" style="cursor: pointer; color: #da626c; font-size: 12px; padding: 2px 4px; padding-right: 0px; padding-bottom:0px; opacity: 0; transition: opacity 0.2s;" 
@@ -136,7 +136,7 @@ function addBookmarkSection() {
                 <div class="bookmark-hidden-${categoryId}" style="display: none;">
                   ${hiddenItems.map((item, index) => `
                     <a href="${item.url}" class="wf-module-item mod-disc" title="${item.title}">
-                      <div class="module-item-title" style="color: #9ccbe2;">
+                      <div class="module-item-title mod-unread">
                         ${item.title}
                       </div>
                       <div class="module-item-bookmark" style="cursor: pointer; color: #da626c; font-size: 12px; padding: 2px 4px; padding-right: 0px; padding-bottom:0px; opacity: 0; transition: opacity 0.2s;" 
@@ -381,7 +381,8 @@ function addDiscussionThreadBookmark(firstPost) {
   // Also try to get title from page title
   const pageTitle = document.title;
   if (pageTitle && pageTitle !== 'VLR.gg') {
-    title = pageTitle.replace(' - VLR.gg', '');
+    // Remove both possible VLR.gg suffixes
+    title = pageTitle.replace(/ - VLR\.gg$/, '').replace(/ \| VLR\.gg$/, '');
   }
   
   // Find the post footer where we'll add the bookmark button

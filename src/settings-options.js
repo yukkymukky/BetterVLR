@@ -10,6 +10,20 @@ function applySettings() {
     var hide_stickied_threads = settings.hide_stickied_threads;
     var hide_recent_discussions = settings.hide_recent_discussions;
     var imgur_proxy = settings.imgur_proxy;
+    const limit_stat_page_results = settings.limit_stat_page_results;
+    
+    if(limit_stat_page_results) {
+      console.log("Limiting stat page results");
+      const allAnchorTags = document.querySelectorAll('a');
+        for (const anchorTag of allAnchorTags) {
+          const resolvedHref = anchorTag.href; 
+          if (resolvedHref.includes('/stats')) {
+            // override the href attribute
+            anchorTag.href = '/stats/?event_group_id=all&region=all&min_rounds=200&min_rating=1550&agent=all&map_id=all&timespan=30d';
+            return;
+          }
+      }
+    }
 
 
     if (hide_flags) {
@@ -90,6 +104,7 @@ function loadCheckboxValues() {
     $("#hide_recent_discussions").prop("checked", settings.hide_recent_discussions);
     $("#hide_bookmarked_threads").prop("checked", settings.hide_bookmarked_threads);
     $("#hide_collapsable_option").prop("checked", settings.hide_collapsable_option);
+    $("#limit_stat_page_results").prop("checked", settings.limit_stat_page_results);
     $("#imgur_proxy").prop("checked", settings.imgur_proxy);
 }
 

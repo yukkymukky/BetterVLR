@@ -2,7 +2,7 @@
   "name": "Yukkys VLR",
   "description": "VLR.GG but Yukkys edition.",
   "author": "Yukky",
-  "version": "1.01",
+  "version": "1.02",
   "manifest_version": 3,
   "icons": {
     "128": "logo.png"

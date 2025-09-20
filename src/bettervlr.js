@@ -23,7 +23,6 @@ import "./compare.js"
 import "./bookmark-threads.js"
 
 
-
 // ANCHOR OP badge
 const original_poster = $(".post-header-author").first().text();
 

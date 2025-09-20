@@ -1,14 +1,69 @@
 
 import { fetchPlayerData } from './compare-data.js';
 
+// Theme detection and color schemes
+function isLightMode() {
+  const bodyBgColor = window.getComputedStyle(document.body).backgroundColor;
+  return bodyBgColor !== 'rgb(47, 51, 55)' && bodyBgColor !== 'rgb(41, 46, 50)';
+}
+
+function getColorScheme() {
+  const isLight = isLightMode();
+  
+  return {
+    // Main backgrounds
+    cardBg: isLight ? '#ffffff' : '#2c3035',
+    tableBg: isLight ? '#ffffff' : '#2c3035',
+    alternateRowBg: isLight ? 'rgba(0, 0, 0, 0.03)' : 'rgba(0, 0, 0, 0.1)',
+    alternateRowBg2: isLight ? 'rgba(0, 0, 0, 0.06)' : 'rgba(0, 0, 0, 0.2)',
+    
+    // Text colors
+    primaryText: isLight ? '#1a1a1a' : '#ffffff',
+    secondaryText: isLight ? '#666666' : '#a0a0a0',
+    mutedText: isLight ? '#888888' : '#999999',
+    
+    // Borders and dividers
+    border: isLight ? '#e0e0e0' : '#5b6167',
+    divider: isLight ? '#e0e0e0' : '#5b6167',
+    
+    // Interactive elements
+    inputBg: isLight ? '#ffffff' : '#2c3035',
+    inputBorder: isLight ? '#d0d0d0' : '#5b6167',
+    
+    // Agent cards
+    agentCardBg: isLight ? '#f8f9fa' : '#2c3035',
+    agentCardBorder: isLight ? '#e0e0e0' : '#5b6167',
+    agentCardSelectedBorder: '#d04e59',
+    agentCardHoverBg: isLight ? '#f0f1f2' : '#3a3f45',
+    agentCardSelectedBg: isLight ? '#fdf2f3' : '#3a2f30',
+    
+    // Filter indicators
+    filterBg: isLight ? 'rgba(218, 98, 108, 0.1)' : 'rgba(218, 98, 108, 0.2)',
+    errorBg: isLight ? 'rgba(255, 107, 107, 0.1)' : 'rgba(255, 107, 107, 0.2)',
+    
+    // Button states
+    buttonBg: isLight ? '#f8f9fa' : 'transparent',
+    buttonActiveBg: '#d04e59',
+    buttonText: isLight ? '#666666' : '#999999',
+    buttonActiveText: 'white',
+    
+    // Stats highlighting
+    betterStatBorder: '#4caf50',
+    worseStatBorder: '#f44336',
+    
+    // Loading states
+    loadingBg: isLight ? '#f8f9fa' : '#2c3035',
+  };
+}
+
 // URL Management Functions
-function updateComparisonUrl(player1Id, player2Id, timePeriod = 'all', agentFilter = null) {
+function updateComparisonUrl(player1Id, player2Id, timePeriod = 'all', agentFilters = null) {
   const params = new URLSearchParams();
   params.set('p1', player1Id);
   params.set('p2', player2Id);
   params.set('period', timePeriod);
-  if (agentFilter) {
-    params.set('agent', agentFilter);
+  if (agentFilters && agentFilters.length > 0) {
+    params.set('agents', agentFilters.join(','));
   }
   
   const newUrl = `/compare?${params.toString()}`;
@@ -17,11 +72,12 @@ function updateComparisonUrl(player1Id, player2Id, timePeriod = 'all', agentFilt
 
 function parseComparisonUrl() {
   const params = new URLSearchParams(window.location.search);
+  const agentsParam = params.get('agents');
   return {
     player1Id: params.get('p1'),
     player2Id: params.get('p2'),
     timePeriod: params.get('period') || 'all',
-    agentFilter: params.get('agent')
+    agentFilters: agentsParam ? agentsParam.split(',') : []
   };
 }
 
@@ -51,6 +107,8 @@ function extractPlayerInfo (url) {
 }
 
 function createComparePageContent () {
+  const colors = getColorScheme();
+  
   return `
         <div class="col-container">
             <div class="col">
@@ -60,21 +118,21 @@ function createComparePageContent () {
                             
                             <div style="display: flex; gap: 20px; margin-bottom: 20px; align-items: end;">
                                 <div style ="flex: 1;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #ffffff;">Player 1 URL:</label>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: ${colors.primaryText};">Player 1 URL:</label>
                                     <input type="text" 
                                            id="player1-url" 
                                            placeholder="https://www.vlr.gg/player/4004/zekken"
-                                           style="width: 100%; padding: 12px; border: 1px solid #5b6167; background: #2c3035; color: #ffffff; border-radius: 2px; font-size: 14px;">
+                                           style="width: 100%; padding: 12px; border: 1px solid ${colors.inputBorder}; background: ${colors.inputBg}; color: ${colors.primaryText}; border-radius: 2px; font-size: 14px;">
                                     <div id="player1-error" style="color: #ff6b6b; font-size: 12px; margin-top: 4px; display: none;"></div>
                                     <div id="player1-info" style="color: #4caf50; font-size: 12px; margin-top: 4px; display: none;"></div>
                                 </div>
                                 
                                 <div style ="flex: 1;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #ffffff;">Player 2 URL:</label>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: ${colors.primaryText};">Player 2 URL:</label>
                                     <input type="text" 
                                            id="player2-url" 
                                            placeholder="https://www.vlr.gg/player/9/tenz"
-                                           style="width: 100%; padding: 12px; border: 1px solid #5b6167; background: #2c3035; color: #ffffff; border-radius: 2px; font-size: 14px;">
+                                           style="width: 100%; padding: 12px; border: 1px solid ${colors.inputBorder}; background: ${colors.inputBg}; color: ${colors.primaryText}; border-radius: 2px; font-size: 14px;">
                                     <div id="player2-error" style="color: #ff6b6b; font-size: 12px; margin-top: 4px; display: none;"></div>
                                     <div id="player2-info" style="color: #4caf50; font-size: 12px; margin-top: 4px; display: none;"></div>
                                 </div>
@@ -176,10 +234,11 @@ function setupPlayerUrlValidation () {
         
         const resultDiv = document.getElementById('comparison-result');
         resultDiv.style.display = 'block';
+        const colors = getColorScheme();
         resultDiv.innerHTML = `
-          <div style="background: #2c3035; border-radius: 2px; text-align: center;">
-            <h4 style="color: #da626c;">Loading Comparison...</h4>
-            <p style="color: #a0a0a0;">Fetching player data, please wait...</p>
+          <div style="background: ${colors.loadingBg}; border-radius: 2px; text-align: center;">
+            <h4 style="color: #d04e59;">Loading Comparison...</h4>
+            <p style="color: ${colors.secondaryText};">Fetching player data, please wait...</p>
           </div>
         `;
 
@@ -190,10 +249,14 @@ function setupPlayerUrlValidation () {
             fetchPlayerData(player2Info.url, 'all')
           ]);
 
-          // Update URL with player IDs
+          // Update URL with player IDs, preserving existing period and agent filters
           const player1Id = extractPlayerIdFromUrl(player1Info.url);
           const player2Id = extractPlayerIdFromUrl(player2Info.url);
-          updateComparisonUrl(player1Id, player2Id, 'all');
+          const urlParams = new URLSearchParams(window.location.search);
+          const currentPeriod = urlParams.get('period') || 'all';
+          const currentAgents = urlParams.get('agents');
+          const agentFilters = currentAgents ? currentAgents.split(',') : [];
+          updateComparisonUrl(player1Id, player2Id, currentPeriod, agentFilters.length > 0 ? agentFilters : null);
 
           // Cache the player info for time period filtering
           const cacheData = {
@@ -211,11 +274,12 @@ function setupPlayerUrlValidation () {
           
         } catch (error) {
           console.error('Error fetching comparison data:', error);
+          const colors = getColorScheme();
           resultDiv.innerHTML = `
-            <div style="padding: 20px; background: #2c3035; border-radius: 2px; text-align: center;">
+            <div style="padding: 20px; background: ${colors.loadingBg}; border-radius: 2px; text-align: center;">
               <h4 style="color: #ff6b6b;">Error Loading Comparison</h4>
-              <p style="color: #a0a0a0;">Failed to fetch player data. Please check the URLs and try again.</p>
-              <p style="color: #666; font-size: 12px;">${error.message}</p>
+              <p style="color: ${colors.secondaryText};">Failed to fetch player data. Please check the URLs and try again.</p>
+              <p style="color: ${colors.mutedText}; font-size: 12px;">${error.message}</p>
             </div>
           `;
         } finally {
@@ -232,25 +296,26 @@ function setupPlayerUrlValidation () {
 
 function displayComparison(player1Data, player2Data, timePeriod) {
   const resultDiv = document.getElementById('comparison-result');
+  const colors = getColorScheme();
   
   resultDiv.innerHTML = `
-    <div style="background: #2c3035; border-radius: 2px; padding: 0; overflow: hidden;">
+    <div style="background: ${colors.cardBg}; border-radius: 2px; padding: 0; overflow: hidden;">
       <!-- Stats Type Filter -->
-      <div style="padding: 15px; border-bottom: 1px solid #5b6167; text-align: center;">
-        <div style="color: #ffffff; margin-bottom: 10px; font-weight: 500;">Stats Mode:</div>
-        <div style="display: inline-flex; background: #2c3035; border-radius: 2px; padding: 2px; border: 1px solid #5b6167; width:100%;">
+      <div style="padding: 15px; border-bottom: 1px solid ${colors.border}; text-align: center;">
+        <div style="color: ${colors.primaryText}; margin-bottom: 10px; font-weight: 500;">Stats Mode:</div>
+        <div style="display: inline-flex; background: ${colors.cardBg}; border-radius: 2px; padding: 2px; border: 1px solid ${colors.border}; width:100%;">
           <button id="weighted-btn" 
                   onclick="toggleStatsMode('weighted')" 
-                  style="width: 100%;  background: #da626c; color: white; border: none; padding: 8px 16px; border-radius: 3px; cursor: pointer; font-size: 14px; transition: all 0.2s; font-family: inherit;">
+                  style="width: 100%;  background: #d04e59; color: white; border: none; padding: 8px 16px; border-radius: 3px; cursor: pointer; font-size: 14px; transition: all 0.2s; font-family: inherit;">
             Weighted
           </button>
           <button id="simple-btn" 
                   onclick="toggleStatsMode('simple')" 
-                  style="width: 100%; background: transparent; color: #999; border: none; padding: 8px 16px; border-radius: 3px; cursor: pointer; font-size: 14px; transition: all 0.2s; font-family: inherit;">
+                  style="width: 100%; background: ${colors.buttonBg}; color: ${colors.buttonText}; border: none; padding: 8px 16px; border-radius: 3px; cursor: pointer; font-size: 14px; transition: all 0.2s; font-family: inherit;">
             Average
           </button>
         </div>
-        <div style="color: #999; font-size: 12px; margin-top: 8px;">
+        <div style="color: ${colors.mutedText}; font-size: 12px; margin-top: 8px;">
           <span id="stats-explanation">Weighted stats based on rounds played per agent</span>
         </div>
       </div>
@@ -264,10 +329,10 @@ function displayComparison(player1Data, player2Data, timePeriod) {
       </div>
       
       <!-- Agent Pool Section -->
-      <div style=" padding: 20px; border-top: 1px solid #5b6167;">
-        <h4 style="color: #ffffff; text-align: center; margin-bottom: 10px;">Agent Pool</h4>
-        <p style="color: #999; text-align: center; font-size: 12px; margin-bottom: 20px;">
-          Click on an agent that both players have used to compare agent-specific stats
+      <div style=" padding: 20px; border-top: 1px solid ${colors.border};">
+        <h4 style="color: ${colors.primaryText}; text-align: center; margin-bottom: 10px;">Agent Pool</h4>
+        <p style="color: ${colors.mutedText}; text-align: center; font-size: 12px; margin-bottom: 20px;">
+          Click agents to add/remove from comparison. You can select multiple agents to compare combined performance.
         </p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
           ${createAgentPoolSection(player1Data.statsTable.agents, player1Data.playerInfo.name, 1)}
@@ -300,7 +365,7 @@ function updateTimePeriodButtons() {
     const btn = document.getElementById(`time-${period}`);
     if (btn) {
       if (period === currentPeriod) {
-        btn.style.background = '#da626c';
+        btn.style.background = '#d04e59';
         btn.style.color = 'white';
       } else {
         btn.style.background = 'transparent';
@@ -313,6 +378,7 @@ function updateTimePeriodButtons() {
 function createPlayerComparisonTable(player1Data, player2Data) {
   const stats1 = player1Data.statsTable.overallStats;
   const stats2 = player2Data.statsTable.overallStats;
+  const colors = getColorScheme();
   
   // Helper function to safely parse values and handle N/A
   function safeParseFloat(value) {
@@ -360,15 +426,15 @@ function createPlayerComparisonTable(player1Data, player2Data) {
   // Function to get button styles based on current period
   const getButtonStyle = (period) => {
     const isActive = period === currentPeriod;
-    const background = isActive ? '#da626c' : 'transparent';
-    const color = isActive ? 'white' : '#999';
+    const background = isActive ? '#d04e59' : colors.buttonBg;
+    const color = isActive ? 'white' : colors.buttonText;
     return `background: ${background}; color: ${color}; border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; transition: all 0.2s; font-family: inherit; width: 25%;`;
   };
 
   return `
-    <div style="background: #2c3035;">
+    <div style="background: ${colors.tableBg};">
       <!-- Player Headers -->
-      <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; padding: 20px; border-bottom: 1px solid #5b6167;">
+      <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; padding: 20px; border-bottom: 1px solid ${colors.border};">
         <!-- Player 1 Header -->
         <div style="display: flex; align-items: center; justify-content: flex-start;">
           <div style="position: relative; margin-right: 15px;">
@@ -404,25 +470,25 @@ function createPlayerComparisonTable(player1Data, player2Data) {
             <div style="display: flex; align-items: center; margin-bottom: 5px;">
               <i class="${player1Data.playerInfo.flagClass}" style="margin-right: 8px;"></i>
               <a href="${player1Data.url.split('?')[0]}?timespan=${currentPeriod}" 
-                 style="color: #ffffff; text-decoration: none; transition: color 0.2s;"
-                 onmouseover="this.style.color='#da626c'" 
-                 onmouseout="this.style.color='#ffffff'"
+                 style="color: ${colors.primaryText}; text-decoration: none; transition: color 0.2s;"
+                 onmouseover="this.style.color='#d04e59'" 
+                 onmouseout="this.style.color='${colors.primaryText}'"
                   target="_blank" rel="noopener noreferrer"
                  >
                 <h3 style="margin: 0; font-size: 16px; font-weight: bold;">${player1Data.playerInfo.name}</h3>
               </a>
             </div>
-            ${player1Data.playerInfo.realName ? `<div style="color: #a0a0a0; font-size: 12px;">${player1Data.playerInfo.realName}</div>` : ''}
-            ${player1Data.playerInfo.teamName ? `<div style="color: #da626c; font-size: 11px; margin-top: 2px;">${player1Data.playerInfo.teamName}</div>` : ''}
+            ${player1Data.playerInfo.realName ? `<div style="color: ${colors.secondaryText}; font-size: 12px;">${player1Data.playerInfo.realName}</div>` : ''}
+            ${player1Data.playerInfo.teamName ? `<div style="color: #d04e59; font-size: 11px; margin-top: 2px;">${player1Data.playerInfo.teamName}</div>` : ''}
           </div>
         </div>
         
         <!-- VS Section with Time Period Filter -->
         <div style="text-align: center;">
-          <h2 style="color: #da626c; margin: 0 0 15px 0; font-size: 24px; font-weight: bold;">VS</h2>
+          <h2 style="color: #d04e59; margin: 0 0 15px 0; font-size: 24px; font-weight: bold;">VS</h2>
           
           <!-- Time Period Filter -->
-          <div style="display: inline-flex; background: #2c3035; border-radius: 2px; padding: 2px; border: 1px solid #5b6167;">
+          <div style="display: inline-flex; background: ${colors.cardBg}; border-radius: 2px; padding: 2px; border: 1px solid ${colors.border};">
             <button id="time-30d" 
                     onclick="switchTimePeriod('30d')" 
                     style="${getButtonStyle('30d')}">
@@ -451,17 +517,17 @@ function createPlayerComparisonTable(player1Data, player2Data) {
           <div style="text-align: right; margin-right: 15px;">
             <div style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 5px;">
               <a href="${player2Data.url.split('?')[0]}?timespan=${currentPeriod}" 
-                 style="color: #ffffff; text-decoration: none; transition: color 0.2s;"
-                 onmouseover="this.style.color='#da626c'" 
-                 onmouseout="this.style.color='#ffffff'"
+                 style="color: ${colors.primaryText}; text-decoration: none; transition: color 0.2s;"
+                 onmouseover="this.style.color='#d04e59'" 
+                 onmouseout="this.style.color='${colors.primaryText}'"
                  target="_blank" rel="noopener noreferrer"
                  >
                 <h3 style="margin: 0; font-size: 16px; font-weight: bold;">${player2Data.playerInfo.name}</h3>
               </a>
               <i class="${player2Data.playerInfo.flagClass}" style="margin-left: 8px;"></i>
             </div>
-            ${player2Data.playerInfo.realName ? `<div style="color: #a0a0a0; font-size: 12px;">${player2Data.playerInfo.realName}</div>` : ''}
-            ${player2Data.playerInfo.teamName ? `<div style="color: #da626c; font-size: 11px; margin-top: 2px;">${player2Data.playerInfo.teamName}</div>` : ''}
+            ${player2Data.playerInfo.realName ? `<div style="color: ${colors.secondaryText}; font-size: 12px;">${player2Data.playerInfo.realName}</div>` : ''}
+            ${player2Data.playerInfo.teamName ? `<div style="color: #d04e59; font-size: 11px; margin-top: 2px;">${player2Data.playerInfo.teamName}</div>` : ''}
           </div>
           <div style="position: relative;">
             <!-- Blurred team logo background -->
@@ -517,42 +583,42 @@ function createPlayerComparisonTable(player1Data, player2Data) {
               // Player 1 has data, Player 2 doesn't
               player1Better = true;
               player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-              player1BorderColor = '#4caf50';
+              player1BorderColor = colors.betterStatBorder;
             } else if (!parse1.isValid && parse2.isValid) {
               // Player 2 has data, Player 1 doesn't
               player2Better = true;
               player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-              player2BorderColor = '#4caf50';
+              player2BorderColor = colors.betterStatBorder;
             } else if (parse1.isValid && parse2.isValid) {
               // Both have valid data - normal comparison
               if (stat.higherBetter) {
                 if (parse1.num > parse2.num) {
                   player1Better = true;
                   player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                  player1BorderColor = '#4caf50';
-                  player2BorderColor = '#f44336';
-                  player2Opacity = '0.7';
+                  player1BorderColor = colors.betterStatBorder;
+                  player2BorderColor = colors.worseStatBorder;
+                  player2Opacity = '0.5';
                 } else if (parse1.num < parse2.num) {
                   player2Better = true;
                   player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                  player1BorderColor = '#f44336';
-                  player2BorderColor = '#4caf50';
-                  player1Opacity = '0.7';
+                  player1BorderColor = colors.worseStatBorder;
+                  player2BorderColor = colors.betterStatBorder;
+                  player1Opacity = '0.5';
                 }
               } else {
                 // Lower is better
                 if (parse1.num < parse2.num) {
                   player1Better = true;
                   player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                  player1BorderColor = '#4caf50';
-                  player2BorderColor = '#f44336';
-                  player2Opacity = '0.7';
+                  player1BorderColor = colors.betterStatBorder;
+                  player2BorderColor = colors.worseStatBorder;
+                  player2Opacity = '0.5';
                 } else if (parse1.num > parse2.num) {
                   player2Better = true;
                   player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                  player1BorderColor = '#f44336';
-                  player2BorderColor = '#4caf50';
-                  player1Opacity = '0.7';
+                  player1BorderColor = colors.worseStatBorder;
+                  player2BorderColor = colors.betterStatBorder;
+                  player1Opacity = '0.5';
                 }
               }
             }
@@ -565,41 +631,41 @@ function createPlayerComparisonTable(player1Data, player2Data) {
               // Player 1 has data, Player 2 doesn't
               player1Better = true;
               player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-              player1BorderColor = '#4caf50';
+              player1BorderColor = colors.betterStatBorder;
             } else if (!parse1.isValid && parse2.isValid) {
               // Player 2 has data, Player 1 doesn't
               player2Better = true;
               player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-              player2BorderColor = '#4caf50';
+              player2BorderColor = colors.betterStatBorder;
             } else if (parse1.isValid && parse2.isValid) {
               // Both have valid data - normal comparison
               if (stat.higherBetter) {
                 if (parse1.num > parse2.num) {
                   player1Better = true;
                   player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                  player1BorderColor = '#4caf50';
-                  player2BorderColor = '#f44336';
-                  player2Opacity = '0.7';
+                  player1BorderColor = colors.betterStatBorder;
+                  player2BorderColor = colors.worseStatBorder;
+                  player2Opacity = '0.5';
                 } else if (parse1.num < parse2.num) {
                   player2Better = true;
                   player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                  player1BorderColor = '#f44336';
-                  player2BorderColor = '#4caf50';
-                  player1Opacity = '0.7';
+                  player1BorderColor = colors.worseStatBorder;
+                  player2BorderColor = colors.betterStatBorder;
+                  player1Opacity = '0.5';
                 }
               } else {
                 if (parse1.num < parse2.num) {
                   player1Better = true;
                   player1Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                  player1BorderColor = '#4caf50';
-                  player2BorderColor = '#f44336';
-                  player2Opacity = '0.7';
+                  player1BorderColor = colors.betterStatBorder;
+                  player2BorderColor = colors.worseStatBorder;
+                  player2Opacity = '0.5';
                 } else if (parse1.num > parse2.num) {
                   player2Better = true;
                   player2Glow = 'text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 6px rgba(255, 255, 255, 0.2);';
-                  player1BorderColor = '#f44336';
-                  player2BorderColor = '#4caf50';
-                  player1Opacity = '0.7';
+                  player1BorderColor = colors.worseStatBorder;
+                  player2BorderColor = colors.betterStatBorder;
+                  player1Opacity = '0.5';
                 }
               }
             }
@@ -607,23 +673,23 @@ function createPlayerComparisonTable(player1Data, player2Data) {
           }
           
           // Alternating row colors
-          const backgroundColor = index % 2 === 0 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.2)';
+          const backgroundColor = index % 2 === 0 ? colors.alternateRowBg : colors.alternateRowBg2;
           
           return `
           <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; padding: 12px; background: ${backgroundColor}; border-left: 3px solid ${player1BorderColor}; border-right: 3px solid ${player2BorderColor};">
             <!-- Player 1 Value -->
             <div style="text-align: right; padding-right: 20px; opacity: ${player1Opacity};">
-              <span style="color: #ffffff; font-size: 16px; font-weight: bold; ${player1Glow}">${stat.value1}</span>
+              <span style="color: ${colors.primaryText}; font-size: 16px; font-weight: bold; ${player1Glow}">${stat.value1}</span>
             </div>
             
             <!-- Stat Label in Center -->
             <div style="text-align: center;">
-              <span style="color: #ffffff; font-size: 14px; font-weight: 400;">${stat.label}</span>
+              <span style="color: ${colors.primaryText}; font-size: 14px; font-weight: 400;">${stat.label}</span>
             </div>
             
             <!-- Player 2 Value -->
             <div style="text-align: left; padding-left: 20px; opacity: ${player2Opacity};">
-              <span style="color: #ffffff; font-size: 16px; font-weight: bold; ${player2Glow}">${stat.value2}</span>
+              <span style="color: ${colors.primaryText}; font-size: 16px; font-weight: bold; ${player2Glow}">${stat.value2}</span>
             </div>
           </div>
           `;
@@ -751,7 +817,7 @@ function createPlayerComparisonCard(playerData, otherPlayerData, side) {
                 } else if (parse1.num < parse2.num) {
                   borderSide = side === 'left' ? 'border-left' : 'border-right';
                   borderColor = '#f44336'; // Red for worse
-                  opacity = '0.7';
+                  opacity = '0.5';
                 }
               } else {
                 if (parse1.num < parse2.num) {
@@ -760,7 +826,7 @@ function createPlayerComparisonCard(playerData, otherPlayerData, side) {
                 } else if (parse1.num > parse2.num) {
                   borderSide = side === 'left' ? 'border-left' : 'border-right';
                   borderColor = '#f44336'; // Red for worse
-                  opacity = '0.7';
+                  opacity = '0.5';
                 }
               }
             }
@@ -793,7 +859,7 @@ function createPlayerComparisonCard(playerData, otherPlayerData, side) {
                 } else if (parse1.num < parse2.num) {
                   borderSide = side === 'left' ? 'border-left' : 'border-right';
                   borderColor = '#f44336';
-                  opacity = '0.7';
+                  opacity = '0.5';
                 }
               } else {
                 if (parse1.num < parse2.num) {
@@ -802,7 +868,7 @@ function createPlayerComparisonCard(playerData, otherPlayerData, side) {
                 } else if (parse1.num > parse2.num) {
                   borderSide = side === 'left' ? 'border-left' : 'border-right';
                   borderColor = '#f44336';
-                  opacity = '0.7';
+                  opacity = '0.5';
                 }
               }
             }
@@ -829,12 +895,13 @@ function createPlayerComparisonCard(playerData, otherPlayerData, side) {
 function createAgentPoolSection(agents, playerName, playerIndex) {
   // Sort agents by matches played - show all agents
   const sortedAgents = [...agents].sort((a, b) => b.matches - a.matches);
+  const colors = getColorScheme();
   
   return `
     <div style="text-align: center;">
       <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
         ${sortedAgents.map(agent => `
-          <div style="background: #2c3035; border-radius: 2px; padding: 8px; border: 1px solid #5b6167; cursor: pointer; transition: all 0.2s;" 
+          <div style="background: ${colors.agentCardBg}; border-radius: 2px; padding: 8px; border: 1px solid ${colors.agentCardBorder}; cursor: pointer; transition: all 0.2s;" 
                class="agent-card" 
                data-agent="${agent.name}"
                data-player="${playerIndex}"
@@ -844,7 +911,7 @@ function createAgentPoolSection(agents, playerName, playerIndex) {
             <img src="${agent.image}" 
                  style="width: 32px; height: 32px;" 
                  alt="${agent.name}" 
-                 title="${agent.name} - ${agent.matches} matches - Click to filter">
+                 title="${agent.name} - ${agent.matches} matches - Click to add/remove from filter">
           </div>
         `).join('')}
       </div>
@@ -855,17 +922,17 @@ function createAgentPoolSection(agents, playerName, playerIndex) {
 // Handle synchronized agent hover effects
 function handleAgentHover(agentName, isHovering) {
   const allAgentCards = document.querySelectorAll(`.agent-card[data-agent="${agentName}"]`);
+  const colors = getColorScheme();
   
   allAgentCards.forEach(card => {
     if (isHovering) {
-      card.style.background = '#3a3f45';
+      card.style.background = colors.agentCardHoverBg;
     } else {
-      // Check if this agent is currently filtered
-      const currentAgent = new URLSearchParams(window.location.search).get('agent');
-      if (currentAgent === agentName) {
-        card.style.background = '#3a2f30';
+      // Check if this agent is currently in the active filters
+      if (activeAgentFilters.includes(agentName)) {
+        card.style.background = colors.agentCardSelectedBg;
       } else {
-        card.style.background = '#2c3035';
+        card.style.background = colors.agentCardBg;
       }
     }
   });
@@ -876,6 +943,7 @@ function toggleStatsMode(mode) {
   if (!window.comparisonData) return;
   
   const { player1Data, player2Data } = window.comparisonData;
+  const colors = getColorScheme();
   
   // Update button states
   const weightedBtn = document.getElementById('weighted-btn');
@@ -883,20 +951,20 @@ function toggleStatsMode(mode) {
   const explanation = document.getElementById('stats-explanation');
   
   if (mode === 'weighted') {
-    weightedBtn.style.background = '#da626c';
+    weightedBtn.style.background = '#d04e59';
     weightedBtn.style.color = 'white';
-    simpleBtn.style.background = 'transparent';
-    simpleBtn.style.color = '#999';
+    simpleBtn.style.background = colors.buttonBg;
+    simpleBtn.style.color = colors.buttonText;
     explanation.textContent = 'Weighted stats based on rounds played per agent';
     
     // Update stats to use weighted calculations
     player1Data.statsTable.overallStats = player1Data.statsTable.weightedStats;
     player2Data.statsTable.overallStats = player2Data.statsTable.weightedStats;
   } else {
-    simpleBtn.style.background = '#da626c';
+    simpleBtn.style.background = '#d04e59';
     simpleBtn.style.color = 'white';
-    weightedBtn.style.background = 'transparent';
-    weightedBtn.style.color = '#999';
+    weightedBtn.style.background = colors.buttonBg;
+    weightedBtn.style.color = colors.buttonText;
     explanation.textContent = 'Simple average across all agents';
     
     // Update stats to use simple averages
@@ -924,8 +992,9 @@ async function switchTimePeriod(newPeriod) {
   // Update URL
   const player1Id = extractPlayerIdFromUrl(cachedData.player1Info.url);
   const player2Id = extractPlayerIdFromUrl(cachedData.player2Info.url);
-  const currentAgent = new URLSearchParams(window.location.search).get('agent');
-  updateComparisonUrl(player1Id, player2Id, newPeriod, currentAgent);
+  const currentAgents = new URLSearchParams(window.location.search).get('agents');
+  const agentFilters = currentAgents ? currentAgents.split(',') : [];
+  updateComparisonUrl(player1Id, player2Id, newPeriod, agentFilters.length > 0 ? agentFilters : null);
 
   // Update button styles based on new URL
   setTimeout(() => {
@@ -943,8 +1012,9 @@ async function switchTimePeriod(newPeriod) {
   // Show loading state for the comparison area
   const comparisonDiv = document.getElementById('player-comparison');
   if (comparisonDiv) {
+    const colors = getColorScheme();
     comparisonDiv.innerHTML = `
-      <div style="text-align: center; padding: 40px; color: #a0a0a0;">
+      <div style="text-align: center; padding: 40px; color: ${colors.secondaryText};">
         <div style="margin-bottom: 10px;">Loading ${newPeriod === 'all' ? 'all time' : newPeriod} data...</div>
         <div style="font-size: 12px;">Please wait...</div>
       </div>
@@ -971,6 +1041,7 @@ async function switchTimePeriod(newPeriod) {
   } catch (error) {
     console.error('Error fetching time period data:', error);
     if (comparisonDiv) {
+      const colors = getColorScheme();
       comparisonDiv.innerHTML = `
         <div style="text-align: center; padding: 40px; color: #ff6b6b;">
           <div style="margin-bottom: 10px;">Error loading ${newPeriod} data</div>
@@ -986,7 +1057,88 @@ window.switchTimePeriod = switchTimePeriod;
 window.updateTimePeriodButtons = updateTimePeriodButtons;
 
 // Agent filtering functionality
-let activeAgentFilter = null;
+let activeAgentFilters = [];
+
+function calculateCombinedAgentStats(allAgents, selectedAgents) {
+  // Get the agents that match our filter
+  const filteredAgents = allAgents.filter(agent => selectedAgents.includes(agent.name));
+  
+  if (filteredAgents.length === 0) {
+    return {}; // Return empty stats if no matching agents
+  }
+  
+  // Initialize totals
+  let totalRounds = 0;
+  let totalKills = 0;
+  let totalDeaths = 0;
+  let totalAssists = 0;
+  let totalFirstKills = 0;
+  let totalFirstDeaths = 0;
+  let totalDamage = 0;
+  let totalKAST = 0;
+  let totalRating = 0;
+  let totalACS = 0;
+  let validKASTCount = 0;
+  let validRatingCount = 0;
+  let validACSCount = 0;
+  
+  // Sum up stats from all selected agents
+  filteredAgents.forEach(agent => {
+    const stats = agent.stats;
+    const rounds = parseInt(stats.RND) || 0;
+    
+    totalRounds += rounds;
+    totalKills += parseInt(stats.K) || 0;
+    totalDeaths += parseInt(stats.D) || 0;
+    totalAssists += parseInt(stats.A) || 0;
+    totalFirstKills += parseInt(stats.FK) || 0;
+    totalFirstDeaths += parseInt(stats.FD) || 0;
+    
+    // For ADR, multiply by rounds to get total damage
+    const adr = parseFloat(stats.ADR) || 0;
+    totalDamage += adr * rounds;
+    
+    // For KAST, Rating, ACS - we'll calculate weighted averages
+    const kastValue = parseFloat((stats.KAST || '0').replace('%', ''));
+    if (!isNaN(kastValue) && kastValue > 0) {
+      totalKAST += kastValue * rounds;
+      validKASTCount += rounds;
+    }
+    
+    const ratingValue = parseFloat(stats.Rating) || 0;
+    if (ratingValue > 0) {
+      totalRating += ratingValue * rounds;
+      validRatingCount += rounds;
+    }
+    
+    const acsValue = parseFloat(stats.ACS) || 0;
+    if (acsValue > 0) {
+      totalACS += acsValue * rounds;
+      validACSCount += rounds;
+    }
+  });
+  
+  // Calculate combined stats
+  const combinedStats = {
+    RND: totalRounds.toString(),
+    K: totalKills.toString(),
+    D: totalDeaths.toString(),
+    A: totalAssists.toString(),
+    FK: totalFirstKills.toString(),
+    FD: totalFirstDeaths.toString(),
+    'K:D': totalDeaths > 0 ? (totalKills / totalDeaths).toFixed(2) : totalKills.toString(),
+    ADR: totalRounds > 0 ? (totalDamage / totalRounds).toFixed(1) : '0',
+    KPR: totalRounds > 0 ? (totalKills / totalRounds).toFixed(2) : '0',
+    APR: totalRounds > 0 ? (totalAssists / totalRounds).toFixed(2) : '0',
+    FKPR: totalRounds > 0 ? (totalFirstKills / totalRounds).toFixed(2) : '0',
+    FDPR: totalRounds > 0 ? (totalFirstDeaths / totalRounds).toFixed(2) : '0',
+    KAST: validKASTCount > 0 ? Math.round(totalKAST / validKASTCount) + '%' : 'N/A',
+    Rating: validRatingCount > 0 ? (totalRating / validRatingCount).toFixed(2) : 'N/A',
+    ACS: validACSCount > 0 ? Math.round(totalACS / validACSCount).toString() : 'N/A'
+  };
+  
+  return combinedStats;
+}
 
 function toggleAgentFilter(agentName, playerIndex) {
   if (!window.comparisonData) return;
@@ -1009,53 +1161,85 @@ function toggleAgentFilter(agentName, playerIndex) {
   const player2Id = extractPlayerIdFromUrl(cachedData.player2Info?.url || '');
   const currentPeriod = new URLSearchParams(window.location.search).get('period') || 'all';
   
-  // Toggle filter
-  if (activeAgentFilter === agentName) {
-    // Remove filter - show overall stats
-    activeAgentFilter = null;
-    updateComparisonUrl(player1Id, player2Id, currentPeriod, null);
+  // Toggle agent in the filter list
+  const agentIndex = activeAgentFilters.indexOf(agentName);
+  if (agentIndex === -1) {
+    // Add agent to filter
+    activeAgentFilters.push(agentName);
+  } else {
+    // Remove agent from filter
+    activeAgentFilters.splice(agentIndex, 1);
+  }
+  
+  // Update URL with current filters
+  updateComparisonUrl(player1Id, player2Id, currentPeriod, activeAgentFilters.length > 0 ? activeAgentFilters : null);
+  
+  // Apply filters and update stats
+  if (activeAgentFilters.length === 0) {
+    // No filters - show overall stats
     player1Data.statsTable.overallStats = player1Data.statsTable.weightedStats;
     player2Data.statsTable.overallStats = player2Data.statsTable.weightedStats;
-    updateAgentFilterUI();
+  } else if (activeAgentFilters.length === 1) {
+    // Single agent filter - use existing logic
+    const singleAgent = activeAgentFilters[0];
+    const p1Agent = player1Data.statsTable.agents.find(a => a.name === singleAgent);
+    const p2Agent = player2Data.statsTable.agents.find(a => a.name === singleAgent);
+    player1Data.statsTable.overallStats = p1Agent.stats;
+    player2Data.statsTable.overallStats = p2Agent.stats;
   } else {
-    // Apply agent filter
-    activeAgentFilter = agentName;
-    updateComparisonUrl(player1Id, player2Id, currentPeriod, agentName);
-    player1Data.statsTable.overallStats = player1Agent.stats;
-    player2Data.statsTable.overallStats = player2Agent.stats;
-    updateAgentFilterUI(agentName);
+    // Multiple agent filter - calculate combined stats
+    const p1CombinedStats = calculateCombinedAgentStats(player1Data.statsTable.agents, activeAgentFilters);
+    const p2CombinedStats = calculateCombinedAgentStats(player2Data.statsTable.agents, activeAgentFilters);
+    player1Data.statsTable.overallStats = p1CombinedStats;
+    player2Data.statsTable.overallStats = p2CombinedStats;
   }
+  
+  updateAgentFilterUI(activeAgentFilters);
   
   // Re-render the comparison cards
   const comparisonDiv = document.getElementById('player-comparison');
   comparisonDiv.innerHTML = createPlayerComparisonTable(player1Data, player2Data);
 }
 
-function updateAgentFilterUI(agentName = null) {
+function updateAgentFilterUI(agentNames = []) {
+  const colors = getColorScheme();
+  
   // Update agent card styling
   document.querySelectorAll('.agent-card').forEach(card => {
     const cardAgent = card.getAttribute('data-agent');
-    if (agentName && cardAgent === agentName) {
-      card.style.border = '2px solid #da626c';
-      card.style.background = '#3a2f30';
+    if (agentNames.includes(cardAgent)) {
+      card.style.border = `1px solid ${colors.agentCardSelectedBorder}`;
+      card.style.background = colors.agentCardSelectedBg;
     } else {
-      card.style.border = '1px solid #5b6167';
-      card.style.background = '#2c3035';
+      card.style.border = `1px solid ${colors.agentCardBorder}`;
+      card.style.background = colors.agentCardBg;
     }
   });
   
   // Update filter indicator
   const filterIndicator = document.getElementById('agent-filter-indicator');
   if (filterIndicator) {
-    if (agentName) {
+    if (agentNames.length > 0) {
+      const agentTags = agentNames.map(agentName => 
+        `<span style="background: #d04e59; color: white; padding: 2px 8px; border-radius: 2px; margin-right: 5px; margin-bottom: 5px; display: inline-block; font-size: 12px;">
+          ${agentName}
+          <button onclick="removeAgentFilter('${agentName}')" 
+                  style="background: transparent; border: none; color: white; margin-left: 4px; cursor: pointer; font-size: 14px; line-height: 1;" 
+                  title="Remove ${agentName}">×</button>
+        </span>`
+      ).join('');
+      
       filterIndicator.innerHTML = `
-        <div style="background: rgba(218, 98, 108, 0.2); padding: 8px 12px; border-radius: 2px; border-left: 3px solid #da626c; margin-bottom: 15px;">
-          <div style="color: #ffffff; font-size: 14px; font-weight: 500;">
-            Filtered by Agent: ${agentName}
-            <button onclick="toggleAgentFilter('${agentName}', 0)" 
-                    style="background: transparent; border: none; color: #da626c; margin-left: 8px; cursor: pointer; font-size: 12px;">
-              [Clear Filter]
+        <div style="background: ${colors.filterBg}; padding: 12px; border-radius: 2px; border-left: 3px solid #d04e59; margin-bottom: 15px;">
+          <div style="color: ${colors.primaryText}; font-size: 14px; font-weight: 500; margin-bottom: 8px;">
+            Filtered by Agents (${agentNames.length}):
+            <button onclick="clearAllAgentFilters()" 
+                    style="background: transparent; border: none; color: #d04e59; margin-left: 8px; cursor: pointer; font-size: 12px;">
+              [Clear All]
             </button>
+          </div>
+          <div style="display: flex; flex-wrap: wrap;">
+            ${agentTags}
           </div>
         </div>
       `;
@@ -1065,18 +1249,94 @@ function updateAgentFilterUI(agentName = null) {
   }
 }
 
+function removeAgentFilter(agentName) {
+  const agentIndex = activeAgentFilters.indexOf(agentName);
+  if (agentIndex !== -1) {
+    activeAgentFilters.splice(agentIndex, 1);
+    
+    // Update URL and re-apply filters
+    if (!window.comparisonData) return;
+    
+    const cachedData = JSON.parse(localStorage.getItem('comparisonCache') || '{}');
+    const player1Id = extractPlayerIdFromUrl(cachedData.player1Info?.url || '');
+    const player2Id = extractPlayerIdFromUrl(cachedData.player2Info?.url || '');
+    const currentPeriod = new URLSearchParams(window.location.search).get('period') || 'all';
+    
+    updateComparisonUrl(player1Id, player2Id, currentPeriod, activeAgentFilters.length > 0 ? activeAgentFilters : null);
+    
+    const { player1Data, player2Data } = window.comparisonData;
+    
+    // Apply filters and update stats
+    if (activeAgentFilters.length === 0) {
+      // No filters - show overall stats
+      player1Data.statsTable.overallStats = player1Data.statsTable.weightedStats;
+      player2Data.statsTable.overallStats = player2Data.statsTable.weightedStats;
+    } else if (activeAgentFilters.length === 1) {
+      // Single agent filter
+      const singleAgent = activeAgentFilters[0];
+      const p1Agent = player1Data.statsTable.agents.find(a => a.name === singleAgent);
+      const p2Agent = player2Data.statsTable.agents.find(a => a.name === singleAgent);
+      player1Data.statsTable.overallStats = p1Agent.stats;
+      player2Data.statsTable.overallStats = p2Agent.stats;
+    } else {
+      // Multiple agent filter
+      const p1CombinedStats = calculateCombinedAgentStats(player1Data.statsTable.agents, activeAgentFilters);
+      const p2CombinedStats = calculateCombinedAgentStats(player2Data.statsTable.agents, activeAgentFilters);
+      player1Data.statsTable.overallStats = p1CombinedStats;
+      player2Data.statsTable.overallStats = p2CombinedStats;
+    }
+    
+    updateAgentFilterUI(activeAgentFilters);
+    
+    // Re-render the comparison
+    const comparisonDiv = document.getElementById('player-comparison');
+    comparisonDiv.innerHTML = createPlayerComparisonTable(player1Data, player2Data);
+  }
+}
+
+function clearAllAgentFilters() {
+  activeAgentFilters = [];
+  
+  if (!window.comparisonData) return;
+  
+  const cachedData = JSON.parse(localStorage.getItem('comparisonCache') || '{}');
+  const player1Id = extractPlayerIdFromUrl(cachedData.player1Info?.url || '');
+  const player2Id = extractPlayerIdFromUrl(cachedData.player2Info?.url || '');
+  const currentPeriod = new URLSearchParams(window.location.search).get('period') || 'all';
+  
+  updateComparisonUrl(player1Id, player2Id, currentPeriod, null);
+  
+  const { player1Data, player2Data } = window.comparisonData;
+  
+  // Show overall stats
+  player1Data.statsTable.overallStats = player1Data.statsTable.weightedStats;
+  player2Data.statsTable.overallStats = player2Data.statsTable.weightedStats;
+  
+  updateAgentFilterUI([]);
+  
+  // Re-render the comparison
+  const comparisonDiv = document.getElementById('player-comparison');
+  comparisonDiv.innerHTML = createPlayerComparisonTable(player1Data, player2Data);
+}
+
 function showAgentFilterMessage(message) {
   const filterIndicator = document.getElementById('agent-filter-indicator');
   if (filterIndicator) {
+    // Store the current content to restore it later
+    const originalContent = filterIndicator.innerHTML;
+    const colors = getColorScheme();
+    
     filterIndicator.innerHTML = `
-      <div style="background: rgba(255, 107, 107, 0.2); padding: 8px 12px; border-radius: 2px; border-left: 3px solid #ff6b6b; margin-bottom: 15px;">
-        <div style="color: #ffffff; font-size: 14px;">${message}</div>
+      <div style="background: ${colors.errorBg}; padding: 8px 12px; border-radius: 2px; border-left: 3px solid #ff6b6b; margin-bottom: 15px;">
+        <div style="color: ${colors.primaryText}; font-size: 14px;">${message}</div>
       </div>
     `;
     
-    // Clear message after 3 seconds
+    // Clear message after 3 seconds and restore original content
     setTimeout(() => {
-      if (filterIndicator) filterIndicator.innerHTML = '';
+      if (filterIndicator) {
+        filterIndicator.innerHTML = originalContent;
+      }
     }, 3000);
   }
 }
@@ -1147,10 +1407,44 @@ async function checkForUrlComparison() {
               switchTimePeriod(urlParams.timePeriod);
             }
             
-            // Apply agent filter if specified
-            if (urlParams.agentFilter) {
+            // Apply agent filters if specified
+            if (urlParams.agentFilters && urlParams.agentFilters.length > 0) {
               setTimeout(() => {
-                toggleAgentFilter(urlParams.agentFilter, 1);
+                // Set the active filters
+                activeAgentFilters = [...urlParams.agentFilters];
+                // Apply each filter
+                urlParams.agentFilters.forEach(agentName => {
+                  // Don't call toggleAgentFilter as it would modify the URL again
+                  // Instead, just apply the filter directly
+                });
+                
+                // Trigger a filter update after comparison loads
+                setTimeout(() => {
+                  if (window.comparisonData) {
+                    const { player1Data, player2Data } = window.comparisonData;
+                    
+                    if (activeAgentFilters.length === 1) {
+                      const singleAgent = activeAgentFilters[0];
+                      const p1Agent = player1Data.statsTable.agents.find(a => a.name === singleAgent);
+                      const p2Agent = player2Data.statsTable.agents.find(a => a.name === singleAgent);
+                      if (p1Agent && p2Agent) {
+                        player1Data.statsTable.overallStats = p1Agent.stats;
+                        player2Data.statsTable.overallStats = p2Agent.stats;
+                      }
+                    } else if (activeAgentFilters.length > 1) {
+                      const p1CombinedStats = calculateCombinedAgentStats(player1Data.statsTable.agents, activeAgentFilters);
+                      const p2CombinedStats = calculateCombinedAgentStats(player2Data.statsTable.agents, activeAgentFilters);
+                      player1Data.statsTable.overallStats = p1CombinedStats;
+                      player2Data.statsTable.overallStats = p2CombinedStats;
+                    }
+                    
+                    updateAgentFilterUI(activeAgentFilters);
+                    const comparisonDiv = document.getElementById('player-comparison');
+                    if (comparisonDiv) {
+                      comparisonDiv.innerHTML = createPlayerComparisonTable(player1Data, player2Data);
+                    }
+                  }
+                }, 500);
               }, 1000);
             }
           }, 2000);
@@ -1160,7 +1454,9 @@ async function checkForUrlComparison() {
   }
 }
 
-// Make function globally available
+// Make functions globally available
 window.handleAgentHover = handleAgentHover;
+window.removeAgentFilter = removeAgentFilter;
+window.clearAllAgentFilters = clearAllAgentFilters;
 
 export { initializeComparePage }

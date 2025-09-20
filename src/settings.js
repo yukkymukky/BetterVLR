@@ -68,8 +68,8 @@ const discussions = `
 
 const sidebar = `
 <div class="wf-card mod-form mod-dark">
-	<div class="form-section" style="margin-top: 0;">Sidebar</div>
-	<div class="form-hint">select which sidebar items to hide</div>
+	<div class="form-section" style="margin-top: 0;">General</div>
+	<div class="form-hint">select which items to hide</div>
 	<div class="form-label" style="margin-top: 15px;">Valorant</div>
 	<div style="margin-bottom: 5px;">
 		<input type="checkbox" id="hide_live_streams">
@@ -91,6 +91,10 @@ const sidebar = `
   <div style="margin-bottom: 5px;">
 		<input type="checkbox" id="hide_collapsable_option">
 		<span style="font-size: 11px; vertical-align: -1px; margin-left: 1px;">Hide Collapsable Options</span>
+	</div>
+  <div style="margin-bottom: 5px;">
+		<input type="checkbox" id="limit_stat_page_results">
+		<span style="font-size: 11px; vertical-align: -1px; margin-left: 1px;">Limit Initial State Page Results</span>
 	</div>
 </div>`;
 
